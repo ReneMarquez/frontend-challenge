@@ -1,15 +1,28 @@
 import {combineReducers, configureStore} from '@reduxjs/toolkit';
 // Or from '@reduxjs/toolkit/query/react'
+import userReducer from "./slices/user";
+import messagesReducer from "./slices/messages";
 import {setupListeners} from '@reduxjs/toolkit/query';
-import { persistStore, persistReducer } from 'redux-persist';
-import storage from 'redux-persist/lib/storage'; // defaults to localStorage for web
-
+import {
+  persistStore,
+  persistReducer,
+  FLUSH,
+  REHYDRATE,
+  PAUSE,
+  PERSIST,
+  PURGE,
+  REGISTER,
+} from 'redux-persist'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const persistConfig = {
   key: 'root',
-  storage,
+  storage: AsyncStorage,
 };
 
-const rootReducer = combineReducers([]);
+const rootReducer = combineReducers({
+  data: userReducer,
+  messages: messagesReducer
+});
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 const preloadedState = {};
@@ -22,7 +35,11 @@ export const store = configureStore({
   // Adding the api middleware enables caching, invalidation, polling,
   // and other useful features of `rtk-query`.
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware()
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
+    })
   // .concat(??.middleware),
 });
 
